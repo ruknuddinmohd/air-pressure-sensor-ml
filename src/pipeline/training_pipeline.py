@@ -15,7 +15,7 @@ from src.components.model_evaluation import ModelEvaluation
 from src.components.model_pusher import ModelPusher
 
 class TrainingPipeline:
-
+    is_pipeline_running = False
     def __init__(self):
         self.training_pipeline = TrainingPipelineConfig()
         #
@@ -84,6 +84,7 @@ class TrainingPipeline:
 
     def run_pipeline(self):
         try:
+            TrainingPipeline().is_pipeline_running = True
             data_ingestion_artifact:DataIngestionArtifact = self.start_data_ingestion()
             data_validation_artifact = self.start_data_validation(data_ingestion_artifact=data_ingestion_artifact)
             data_transformation_artifact = self.start_data_transformation(data_validation_artifact=data_validation_artifact)
@@ -92,5 +93,7 @@ class TrainingPipeline:
             if not model_eval_artifact.is_model_accepted:
                 raise Exception("Trained model is not better than the best model")
             model_pusher_artifact = self.start_model_pusher(model_eval_artifact)
+            TrainingPipeline().is_pipeline_running = False
         except Exception as e:
+            TrainingPipeline().is_pipeline_running = False
             raise SensorException(e,sys)
